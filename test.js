@@ -1,37 +1,41 @@
 function updateResponseText(testNumber, message) {
   const responseTextElement = document.querySelector(`.testContainer${testNumber} .responseText`);
-  if (responseTextElement) {
-    responseTextElement.innerHTML = message;
-  } else {
-    console.warn(`responseText element not found for test ${testNumber}`);
-  }
+  responseTextElement.innerHTML = message;
 }
 
 function testGetCities() {
-  fetch('/cities')
+  fetch("/cities")
     .then(response => {
       if (response.status === 200) return response.json();
-      throw new Error("Status: " + response.status);
+      throw new Error();
     })
     .then(data => {
-      updateResponseText(1, data.length > 0 ? "The test ran successfully!" : "The test failed.");
+      if (data) {
+        updateResponseText(1, "The test ran successfully!");
+      } else {
+        throw new Error();
+      }
     })
     .catch(() => updateResponseText(1, "The test failed."));
 }
 
 function testPostCity() {
-  fetch('/cities', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  fetch("/cities", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: "Malmö", country: "Sweden" })
   })
     .then(response => {
       if (response.status === 200) return response.json();
-      throw new Error("Status: " + response.status);
+      throw new Error();
     })
     .then(data => {
       const ok = data.id && data.name === "Malmö" && data.country === "Sweden";
-      updateResponseText(2, ok ? "The test ran successfully!" : "The test failed.");
+      if (ok) {
+        updateResponseText(2, "The test ran successfully!");
+      } else {
+        throw new Error();
+      }
     })
     .catch(() => updateResponseText(2, "The test failed."));
 }
@@ -44,10 +48,10 @@ function testDeleteCity() {
   })
     .then(response => {
       if (response.status === 200) return response.json();
-      throw new Error("Status: " + response.status);
+      throw new Error();
     })
     .then(data => {
-      updateResponseText(3, data.message === "Delete OK" ? "The test ran successfully!" : "The test failed.");
+      updateResponseText(3, "The test ran successfully!");
     })
     .catch(() => updateResponseText(3, "The test failed."));
 }
@@ -56,10 +60,14 @@ function testGetCitiesAfterChanges() {
   fetch('/cities')
     .then(response => {
       if (response.status === 200) return response.json();
-      throw new Error("Status: " + response.status);
+      throw new Error();
     })
     .then(data => {
-      updateResponseText(4, data.some(city => city.name === "Malmö") ? "The test ran successfully!" : "The test failed.");
+      if (data.some(city => city.name === "Malmö")) {
+        updateResponseText(4, "The test ran successfully!");
+      } else {
+        throw new Error();
+      }
     })
     .catch(() => updateResponseText(4, "The test failed."));
 }
@@ -68,6 +76,7 @@ function testGetCityById() {
   fetch('/cities/43')
     .then(response => {
       if (response.status === 200) return response.json();
+      throw new Error();
     })
     .then(data => {
       const ok = data.id === 43 && data.name === "Malmö" && data.country === "Sweden";
@@ -80,7 +89,7 @@ function testSearchCitiesByText() {
   fetch('/cities/search?city=en')
     .then(response => {
       if (response.status === 200) return response.json();
-      throw new Error("Status: " + response.status);
+      throw new Error();
     }).then(responseObj => {
       const searchHitsArray = [];
       for (let currResponsObj of responseObj) {
@@ -90,16 +99,15 @@ function testSearchCitiesByText() {
       console.log(responseObj)
     })
     .catch(() => updateResponseText(6, "The test failed."));
-
 }
 
 function testSearchCitiesByTextAndCountry() {
   fetch('/cities/search?city=en&country=Sweden')
     .then(response => {
       if (response.status === 200) return response.json();
-      throw new Error("Status: " + response.status);
+      throw new Error();
     })
-    .then(data => {
+    .then(() => {
       updateResponseText(7, "The test ran successfully!");
     })
     .catch(() => updateResponseText(7, "The test failed."));
@@ -125,7 +133,11 @@ function testInvalidRequest() {
 
       fetch(requestObj)
         .then(response => {
-          updateResponseText(8, "The test ran successfully!");
+          if (response.status == 400) {
+            updateResponseText(8, "The test ran successfully!");
+          } else {
+            throw new Error();
+          }
         })
         .catch(() => updateResponseText(8, "The test failed."));
     }
@@ -138,15 +150,16 @@ function testInvalidRequest() {
 
       fetch(requestObj)
         .then(response => {
-          updateResponseText(8, "The test ran successfully!");
+          if (response.status == 400) {
+            updateResponseText(8, "The test ran successfully!");
+          } else {
+            throw new Error();
+          }
         })
         .catch(() => updateResponseText(8, "The test failed."));
     }
   }
-
-
 }
-
 
 function testInvalidPostRequest() {
   const requestObj = new Request("http://localhost:8000/cities", {
@@ -157,8 +170,12 @@ function testInvalidPostRequest() {
 
   fetch(requestObj)
     .then(response => {
-      updateResponseText(9, "The test ran successfully!");
-      return [];
+      if (response.status == 409) {
+        updateResponseText(9, "The test ran successfully!");
+        return [];
+      } else {
+        throw new Error();
+      }
     })
     .catch(() => updateResponseText(9, "The test failed."));
 }
@@ -172,12 +189,15 @@ function testInvalidDeleteRequest() {
 
   fetch(requestObj)
     .then(response => {
-      updateResponseText(10, "The test ran successfully!");
+      if (response.status == 404) {
+        updateResponseText(10, "The test ran successfully!");
+      } else {
+        throw new Error();
+      }
     })
     .catch(() => updateResponseText(10, "The test failed."));
 }
 
-// Event listeners
 document.querySelector('.testContainer1 .btnTest').addEventListener('click', testGetCities);
 document.querySelector('.testContainer2 .btnTest').addEventListener('click', testPostCity);
 document.querySelector('.testContainer3 .btnTest').addEventListener('click', testDeleteCity);

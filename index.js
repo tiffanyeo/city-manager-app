@@ -1,11 +1,10 @@
 
 function init() {
 
-    const requestObj = new Request("http://localhost:8000/cities");
+    const requestObjURL = new Request("http://localhost:8000/cities");
 
-    fetch(requestObj)
+    fetch(requestObjURL)
         .then(fetchAndShowCities)
-        .then(showCities)
         .catch(handleError);
 }
 
@@ -18,17 +17,16 @@ function fetchAndShowCities() {
                 showFeedbackText("Server error");
                 throw new Error("Server error");
             }
-            return response.json(); 
+            return response.json();
         })
         .then(allCities => {
-            // Lägg till kontrollen här för allCities
             if (allCities) {
-                showCities(allCities);  // Anropar showCities bara om allCities finns
+                showCities(allCities);
             } else {
                 showFeedbackText("No cities found");
             }
-        }) 
-        .catch(error => showFeedbackText(error.message)); 
+        })
+        .catch(error => showFeedbackText(error.message));
 }
 
 
@@ -54,7 +52,6 @@ function showFeedbackText(message) {
 }
 
 function showCities(allCities) {
-
     const cityContainerDOM = document.querySelector(".cityBoxContainer");
     cityContainerDOM.innerHTML = "";
 
@@ -76,7 +73,6 @@ function showCities(allCities) {
 
 }
 
-
 async function addCity() {
 
     const cityNameInput = document.querySelector(".UIAddCityName input").value;
@@ -89,7 +85,7 @@ async function addCity() {
 
     const requestObj = new Request("http://localhost:8000/cities", {
         method: "POST",
-        headers: { "Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCityObj)
     });
 
@@ -98,12 +94,15 @@ async function addCity() {
 
         if (!responseObj.ok) {
             const returnedError = await responseObj.json();
-            throw {
-                message: "City already exists."
-            };
+            if (returnedError == []) {
+                throw new error();
+            } else {
+                throw {
+                    message: "City exists"
+                };
+            }
         }
 
-        const feedbackText = document.querySelector(".feedbackText");
         showFeedbackText("City added")
         init();
     }

@@ -34,6 +34,20 @@ async function handler(req) {
   const reqParamCity = reqUrl.searchParams.get("city");
   const reqParamCountry = reqUrl.searchParams.get("country");
 
+  // Godkänner första "preflight" requesten, dvs en check för om det är tillåtet med CORS eller ej, här returneras ett "JA" och sedan kommer webbläsaeren skicka den rätta förfrågan som hanteras nedan. 
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+
+  }
+
+
   if (reqUrl.pathname === "/" || reqUrl.pathname === "/index.html") {
     const htmlFile = await Deno.readTextFile("index.html");
     return new Response(htmlFile, {
@@ -162,7 +176,8 @@ async function handler(req) {
 
       if (reqBody.name || reqBody.country) {
         let maxIdOfCity = 0;
-        for (const currCity of cities) {
+
+        for (let currCity of cities) {
           if (currCity.id > maxIdOfCity) {
             maxIdOfCity = currCity.id;
           }
@@ -190,15 +205,15 @@ async function handler(req) {
 
     if (reqPathname == "/cities") {
 
-      let reqBody = {} 
+      let reqBody = {}
       let requestWithoutBody = false;
-    
-      if (req.headers.get("Content-Length") > 0  ) {
+
+      if (req.headers.get("Content-Length") > 0) {
         reqBody = await req.json();
       } else {
         requestWithoutBody = true;
       }
-    
+
       if (!reqBody.id || requestWithoutBody) {
         return new Response(JSON.stringify({ message: "Missing city ID." }), {
           status: 400,
@@ -232,22 +247,10 @@ async function handler(req) {
       }
     }
 
-    if (reqPathname == "/mordor") {
-      return new Response(JSON.stringify({ message: "Invalid endpoint." }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...headersCORS }
-      })
-    }
-
-    return new Response(JSON.stringify({ message: "Invalid endpoint." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json", ...headersCORS }
-    })
-
   }
 
 
-  return new Response(JSON.stringify({ message: "Invalid endpoint." }), {
+  return new Response(JSON.stringify({ message: "Invalid request" }), {
     status: 400,
     headers: { "Content-Type": "application/json", ...headersCORS }
   })
